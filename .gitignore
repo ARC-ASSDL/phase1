@@ -1,0 +1,7 @@
+# Backend
+server/target/
+*.class
+
+# IDE
+.idea/
+*.iml
