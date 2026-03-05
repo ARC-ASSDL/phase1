@@ -55,8 +55,7 @@ public class CubicSplineBuilder {
         double[] alpha = new double[n];
 
         for (int i = 1; i < segments; i++) {
-            alpha[i] = (3.0 / h[i]) * (values[i + 1] - values[i]) -
-                    (3.0 / h[i - 1]) * (values[i] - values[i - 1]);
+            alpha[i] = (3.0 / h[i]) * (values[i + 1] - values[i]) - (3.0 / h[i - 1]) * (values[i] - values[i - 1]);
         }
 
         double[] paxis = new double[n];
@@ -84,8 +83,7 @@ public class CubicSplineBuilder {
 
             c[j] = lower[j] - upper[j] * c[j + 1];
 
-            b[j] = (values[j + 1] - values[j]) / h[j]
-                    - h[j] * (c[j + 1] + 2 * c[j]) / 3;
+            b[j] = (values[j + 1] - values[j]) / h[j] - h[j] * (c[j + 1] + 2 * c[j]) / 3;
 
             a[j] = (c[j + 1] - c[j]) / (3 * h[j]);
 
