@@ -13,4 +13,5 @@ public class TrajectoryModel {
     private final List<CubicSegment> splineY;
     private final List<CubicSegment> splineZ;
     private final double totalDuration;
+
 }
