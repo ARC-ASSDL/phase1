@@ -1,4 +1,6 @@
-package com.evtol.trajectoryenigne.domain;
+package com.evtol.trajectoryengine.domain;
+
+import java.util.List;
 
 public class TrajectoryModel {
 
