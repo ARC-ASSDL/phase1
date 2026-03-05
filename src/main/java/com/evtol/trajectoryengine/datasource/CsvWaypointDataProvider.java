@@ -4,10 +4,10 @@ import com.evtol.trajectoryengine.domain.Waypoint;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
+
 @Component
 public class CsvWaypointDataProvider {
 
@@ -17,12 +17,9 @@ public class CsvWaypointDataProvider {
 
         try {
 
-            InputStream inputStream = getClass()
-                    .getClassLoader()
-                    .getResourceAsStream("rectangle_points.csv");
-
-            assert inputStream != null;
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            BufferedReader reader = new BufferedReader(
+                    new FileReader("data-generation/sample-data/rectangle_points.csv")
+            );
 
             String line;
 
@@ -40,14 +37,13 @@ public class CsvWaypointDataProvider {
                 waypoints.add(new Waypoint(t, x, y, z));
             }
 
+            reader.close();
+
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-
-
-
-   //to be removed later(just for testing)
+        // to be removed later (just for testing)
         for (Waypoint wp : waypoints) {
             System.out.println(
                     "t=" + wp.getT() +
@@ -56,9 +52,6 @@ public class CsvWaypointDataProvider {
                             ", z=" + wp.getZ()
             );
         }
-
-
-
 
         return waypoints;
     }
