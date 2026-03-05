@@ -27,7 +27,7 @@ public class CubicSegment {
 
         double dt = t - t0;
 
-        return ((d * dt + c) * dt + b) * dt + a;
+        return ((a * dt + b) * dt + c) * dt + d;
     }
 
     public boolean contains(double t) {
