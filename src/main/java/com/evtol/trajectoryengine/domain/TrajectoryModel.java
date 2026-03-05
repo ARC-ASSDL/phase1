@@ -1,3 +1,5 @@
+package com.evtol.trajectoryenigne.domain;
+
 public class TrajectoryModel {
 
     private final List<CubicSegment> xSegments;
