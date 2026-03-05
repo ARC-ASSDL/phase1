@@ -42,10 +42,10 @@ public class CubicSplineBuilder {
         int n = values.length;
         int segments = n - 1;
 
-        double[] a = new double[segments];
-        double[] b = new double[segments];
-        double[] c = new double[n];
         double[] d = new double[segments];
+        double[] c = new double[segments];
+        double[] b = new double[n];
+        double[] a = new double[segments];
         double[] h = new double[segments];
 
         for (int i = 0; i < segments; i++) {
@@ -55,15 +55,13 @@ public class CubicSplineBuilder {
         double[] alpha = new double[n];
 
         for (int i = 1; i < segments; i++) {
-            alpha[i] =
-                    (3 / h[i]) * (values[i + 1] - values[i]) -
-                            (3 / h[i - 1]) * (values[i] - values[i - 1]);
+            alpha[i] = (3 / h[i]) * (values[i + 1] - values[i]) - (3 / h[i - 1]) * (values[i] - values[i - 1]);
         }
 
-        // Renamed arrays
-        double[] paxis = new double[n];   // originally l
-        double[] upper = new double[n];   // originally mu
-        double[] lower = new double[n];   // originally z
+
+        double[] paxis = new double[n];
+        double[] upper = new double[n];
+        double[] lower = new double[n];
 
         paxis[0] = 1;
         upper[0] = 0;
@@ -80,20 +78,17 @@ public class CubicSplineBuilder {
 
         paxis[n - 1] = 1;
         lower[n - 1] = 0;
-        c[n - 1] = 0;
+        b[n - 1] = 0;
 
         for (int j = segments - 1; j >= 0; j--) {
 
-            c[j] = lower[j] - upper[j] * c[j + 1];
+            b[j] = lower[j] - upper[j] * c[j + 1];
 
-            b[j] =
-                    (values[j + 1] - values[j]) / h[j]
-                            - h[j] * (c[j + 1] + 2 * c[j]) / 3;
+            c[j] = (values[j + 1] - values[j]) / h[j] - h[j] * (c[j + 1] + 2 * c[j]) / 3;
 
-            d[j] =
-                    (c[j + 1] - c[j]) / (3 * h[j]);
+            a[j] = (c[j + 1] - c[j]) / (3 * h[j]);
 
-            a[j] = values[j];
+            d[j] = values[j];
         }
 
         List<CubicSegment> result = new ArrayList<>();
@@ -102,12 +97,7 @@ public class CubicSplineBuilder {
 
             result.add(
                     new CubicSegment(
-                            t[i],
-                            t[i + 1],
-                            a[i],
-                            b[i],
-                            c[i],
-                            d[i]
+                            t[i], t[i + 1], a[i], b[i], c[i], d[i]
                     )
             );
         }
@@ -121,12 +111,7 @@ public class CubicSplineBuilder {
 
             result.add(
                     new CubicSegment(
-                            t[i],
-                            t[i + 1],
-                            a[i],
-                            b[i],
-                            c[i],
-                            d[i]
+                            t[i], t[i + 1], a[i], b[i], c[i], d[i]
                     )
             );
         }
