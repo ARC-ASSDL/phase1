@@ -18,7 +18,7 @@ public class CsvWaypointDataProvider {
         try {
 
             BufferedReader reader = new BufferedReader(
-                    new FileReader("data-generation/sample-data/rectangle_points.csv")
+                    new FileReader("data-generation/sample-data/Pentagon.csv")
             );
 
             String line;
@@ -44,14 +44,14 @@ public class CsvWaypointDataProvider {
         }
 
         // to be removed later (just for testing)
-        for (Waypoint wp : waypoints) {
-            System.out.println(
-                    "t=" + wp.getT() +
-                            ", x=" + wp.getX() +
-                            ", y=" + wp.getY() +
-                            ", z=" + wp.getZ()
-            );
-        }
+//        for (Waypoint wp : waypoints) {
+//            System.out.println(
+//                    "t=" + wp.getT() +
+//                            ", x=" + wp.getX() +
+//                            ", y=" + wp.getY() +
+//                            ", z=" + wp.getZ()
+//            );
+//        }
 
         return waypoints;
     }

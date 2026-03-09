@@ -1,5 +1,8 @@
 package com.evtol.trajectoryengine.domain;
 
+import lombok.Getter;
+
+@Getter
 public class CubicSegment {
 
     private final double t0;
