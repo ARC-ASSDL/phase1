@@ -48,7 +48,7 @@ Z(t)
 Spline equation:
 
 ```
-S(t) = a + b(t - t₀) + c(t - t₀)² + d(t - t₀)³
+S(t) = d+c(t-t₀)+b(t-t₀)²+a(t-t₀)³
 ```
 
 Include:
@@ -183,7 +183,7 @@ Root package containing the complete backend implementation of the trajectory en
 
 * Implements layered clean architecture
 * Separates domain, service, and infrastructure logic
-* Keeps spline computation independent from API layer
+* Keeps spline computation independent of API layer
 
 ---
 
