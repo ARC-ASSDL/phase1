@@ -1,7 +1,8 @@
 package com.evtol.trajectoryengine.domain;
 
 import java.util.List;
-
+import lombok.*;
+@Getter
 public class TrajectoryModel {
 
     private final List<CubicSegment> xSegments;
