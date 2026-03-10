@@ -4,11 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="98b16d7d-87ae-4612-b940-741bdd264b1e" name="Changes" comment="updated rectangle_points path">
-      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/evtol/trajectoryengine/service/SamplingService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/evtol/trajectoryengine/service/SamplingService.java" afterDir="false" />
-    </list>
+    <list default="true" id="98b16d7d-87ae-4612-b940-741bdd264b1e" name="Changes" comment="updated rectangle_points path" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
