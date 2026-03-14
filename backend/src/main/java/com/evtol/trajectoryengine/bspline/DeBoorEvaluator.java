@@ -34,7 +34,7 @@ public class DeBoorEvaluator {
 
                 double z = (1 - alpha) * p1.getZ() + alpha * p2.getZ();
 
-                d.set(j, new Waypoint(x, y, z));
+                d.set(j, new Waypoint(t,x, y, z));
             }
         }
 

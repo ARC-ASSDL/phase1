@@ -46,8 +46,10 @@ public class TrajectoryService {
         TrajectoryModel trajectoryModel;
 
         if ("bspline".equalsIgnoreCase(algorithm)) {
+            System.out.println("BSpline  ----");
             trajectoryModel = bSplineCurveBuilder.build(waypoints);
         } else {
+            System.out.println("cubicSpline  ---");
             trajectoryModel = cubicSplineBuilder.build(waypoints);
         }
 
