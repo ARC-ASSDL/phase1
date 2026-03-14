@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.*;
 @Service
+
 public class SamplingService {
 
     public List<TrajectoryPoint> sample(TrajectoryModel trajectoryModel, double samplingInterval) {
