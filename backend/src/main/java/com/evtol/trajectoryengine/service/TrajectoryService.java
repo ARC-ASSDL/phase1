@@ -6,10 +6,12 @@ import com.evtol.trajectoryengine.domain.TrajectoryPoint;
 import com.evtol.trajectoryengine.domain.Waypoint;
 import com.evtol.trajectoryengine.dto.TrajectoryResponse;
 import com.evtol.trajectoryengine.spline.CubicSplineBuilder;
+import com.evtol.trajectoryengine.bspline.BSplineCurveBuilder;
 import com.evtol.trajectoryengine.validation.WaypointValidator;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.beans.factory.annotation.Value;
-import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,29 +22,43 @@ public class TrajectoryService {
 
     private final CsvWaypointDataProvider dataProvider;
     private final WaypointValidator validator;
-    private final CubicSplineBuilder splineBuilder;
+
+    private final CubicSplineBuilder cubicSplineBuilder;
+    private final BSplineCurveBuilder bSplineCurveBuilder;
+
     private final SamplingService samplingService;
 
     @Value("${trajectory.sampling.interval}")
-    private  double samplingInterval;
+    private double samplingInterval;
+
+    @Value("${trajectory.algorithm}")
+    private String algorithm;
 
     public TrajectoryResponse generateTrajectory() {
 
-        // 1. Load data
+        // 1. Load waypoints
         List<Waypoint> waypoints = dataProvider.loadWaypoints();
 
-        // 2. Validate
+        // 2. Validate waypoints
         validator.validate(waypoints);
 
-        // 3. Build spline
-        TrajectoryModel trajectoryModel = splineBuilder.build(waypoints);
+        // 3. Build trajectory model
+        TrajectoryModel trajectoryModel;
 
-        // 4. sample spline
-        List<TrajectoryPoint> points = samplingService.sample(trajectoryModel,samplingInterval);
+        if ("bspline".equalsIgnoreCase(algorithm)) {
+            trajectoryModel = bSplineCurveBuilder.build(waypoints);
+        } else {
+            trajectoryModel = cubicSplineBuilder.build(waypoints);
+        }
+
+        // 4. Sample trajectory
+        List<TrajectoryPoint> points =
+                samplingService.sample(trajectoryModel, samplingInterval);
 
         // 5. Build response
-        TrajectoryResponse response = new TrajectoryResponse(points,trajectoryModel.getTotalDuration());
-        return response;
-
+        return new TrajectoryResponse(
+                points,
+                trajectoryModel.getTotalDuration()
+        );
     }
 }
