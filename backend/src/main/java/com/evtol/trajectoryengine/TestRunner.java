@@ -1,44 +1,39 @@
-//This class is just to Test loadWayPoints method from CsvWayPointDataProvider
 package com.evtol.trajectoryengine;
 
-import com.evtol.trajectoryengine.datasource.CsvWaypointDataProvider;
-import com.evtol.trajectoryengine.domain.TrajectoryModel;
-import com.evtol.trajectoryengine.domain.TrajectoryPoint;
-import com.evtol.trajectoryengine.domain.Waypoint;
 import com.evtol.trajectoryengine.dto.TrajectoryResponse;
-import com.evtol.trajectoryengine.service.SamplingService;
-import com.evtol.trajectoryengine.spline.CubicSplineBuilder;
+import com.evtol.trajectoryengine.domain.TrajectoryPoint;
+import com.evtol.trajectoryengine.service.TrajectoryService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 @Component
 public class TestRunner implements CommandLineRunner {
 
-    private final CsvWaypointDataProvider csvWaypointDataProvider;
-    private final SamplingService samplingService;
-    private final CubicSplineBuilder cubicSplineBuilder;
+    private final TrajectoryService trajectoryService;
 
-    public TestRunner(CsvWaypointDataProvider csvWaypointDataProvider,
-                      SamplingService samplingService, CubicSplineBuilder csb, CubicSplineBuilder cubicSplineBuilder) {
-        this.csvWaypointDataProvider = csvWaypointDataProvider;
-        this.samplingService = samplingService;
-        this.cubicSplineBuilder = cubicSplineBuilder;
+    public TestRunner(TrajectoryService trajectoryService) {
+        this.trajectoryService = trajectoryService;
     }
 
     @Override
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
 
-        List<Waypoint> waypoints = csvWaypointDataProvider.loadWaypoints();
+        System.out.println("Starting trajectory generation...");
 
-        TrajectoryModel model = cubicSplineBuilder.build(waypoints);
+        TrajectoryResponse response = trajectoryService.generateTrajectory();
 
-        List<TrajectoryPoint> points = samplingService.sample(model, 0.5);
+        System.out.println("Total duration: " + response.getTotalDuration());
 
-//        System.out.println(points);
+        for (TrajectoryPoint p : response.getTrajectory()) {
 
-        for(TrajectoryPoint point : points)
-            System.out.println(point);
+            System.out.println(
+                    "t=" + p.getT() +
+                            " x=" + p.getX() +
+                            " y=" + p.getY() +
+                            " z=" + p.getZ()
+            );
+        }
+
+        System.out.println("Trajectory generation completed.");
     }
 }
