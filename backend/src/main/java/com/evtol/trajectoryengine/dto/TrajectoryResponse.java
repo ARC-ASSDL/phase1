@@ -1,6 +1,7 @@
 package com.evtol.trajectoryengine.dto;
 
 import com.evtol.trajectoryengine.domain.TrajectoryPoint;
+import com.evtol.trajectoryengine.domain.Waypoint;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
@@ -14,5 +15,6 @@ import java.util.List;
 public class TrajectoryResponse {
 
     private List<TrajectoryPoint> trajectory;
+    private List<Waypoint> waypoints;
     private double totalDuration;
 }

@@ -31,35 +31,47 @@ public class TrajectoryService {
     @Value("${trajectory.sampling.interval}")
     private double samplingInterval;
 
-    @Value("${trajectory.algorithm}")
+    @Value("${trajectory.algorithm:cubic}")
     private String algorithm;
 
     public TrajectoryResponse generateTrajectory() {
 
         // 1. Load waypoints
         List<Waypoint> waypoints = dataProvider.loadWaypoints();
+        System.out.println("Loaded waypoints: " + waypoints.size());
 
-        // 2. Validate waypoints
+        // 2. Validate
         validator.validate(waypoints);
 
-        // 3. Build trajectory model
+        // 3. Choose algorithm safely
         TrajectoryModel trajectoryModel;
 
-        if ("bspline".equalsIgnoreCase(algorithm)) {
-            System.out.println("BSpline  ----");
-            trajectoryModel = bSplineCurveBuilder.build(waypoints);
-        } else {
-            System.out.println("cubicSpline  ---");
-            trajectoryModel = cubicSplineBuilder.build(waypoints);
+        switch (algorithm.toLowerCase()) {
+
+            case "bspline":
+                System.out.println("Using B-Spline");
+                trajectoryModel = bSplineCurveBuilder.build(waypoints);
+                break;
+
+            case "cubic":
+            case "cubicspline":
+            default:
+                System.out.println("Using Cubic Spline");
+                trajectoryModel = cubicSplineBuilder.build(waypoints);
+                break;
         }
 
         // 4. Sample trajectory
         List<TrajectoryPoint> points =
                 samplingService.sample(trajectoryModel, samplingInterval);
 
-        // 5. Build response
+        System.out.println("Generated samples: " + points.size());
+        System.out.println("Total duration: " + trajectoryModel.getTotalDuration());
+
+        // 5. Return BOTH trajectory + original waypoints
         return new TrajectoryResponse(
                 points,
+                waypoints,   // ✅ added
                 trajectoryModel.getTotalDuration()
         );
     }
