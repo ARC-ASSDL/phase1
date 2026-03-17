@@ -12,8 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @Data
-@CrossOrigin(origins = "*")
-@RestController
 @AllArgsConstructor
 @NoArgsConstructor
 public class TrajectoryResponse {

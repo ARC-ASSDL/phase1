@@ -3,7 +3,6 @@ package com.evtol.trajectoryengine.bspline;
 import com.evtol.trajectoryengine.domain.TrajectoryModel;
 import com.evtol.trajectoryengine.domain.Waypoint;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -16,51 +15,39 @@ public class BSplineCurveBuilder {
 
     private final KnotVectorGenerator knotVectorGenerator;
 
-    // ✅ NEW: smoothing factor
-    @Value("${trajectory.bspline.lambda:0.1}")
-    private double lambda;
-
     public BSplineCurveBuilder(KnotVectorGenerator knotVectorGenerator) {
         this.knotVectorGenerator = knotVectorGenerator;
     }
 
-    public TrajectoryModel build(List<Waypoint> controlPoints) {
+    public TrajectoryModel build(List<Waypoint> controlPoints, double lambda) {
 
         if (controlPoints == null || controlPoints.size() < DEGREE + 1) {
-            throw new IllegalArgumentException(
-                    "Not enough control points for cubic B-Spline"
-            );
+            throw new IllegalArgumentException("Not enough control points");
         }
 
         int n = controlPoints.size();
 
-        // ✅ STEP 1: Smooth control points (TRUE global smoothing)
-        List<Waypoint> smoothedControlPoints = smooth(controlPoints);
+        List<Waypoint> smoothedControlPoints = smooth(controlPoints, lambda);
 
-        double[] knots = knotVectorGenerator.generateClampedUniform(
-                n,
-                DEGREE
-        );
+        double[] knots = knotVectorGenerator.generateClampedUniform(n, DEGREE);
 
         double totalDuration =
                 knots[knots.length - DEGREE - 1] - knots[DEGREE];
 
         return new TrajectoryModel(
-                smoothedControlPoints, // ✅ smoothed control points
+                smoothedControlPoints,
                 knots,
                 DEGREE,
                 totalDuration
         );
     }
 
-    // -------------------------------
-    // TRUE smoothing: (I + λ DᵀD)P = P_input
-    // -------------------------------
-    private List<Waypoint> smooth(List<Waypoint> points) {
+    // ------------------ SMOOTHING ------------------
+
+    private List<Waypoint> smooth(List<Waypoint> points, double lambda) {
 
         int n = points.size();
 
-        // Build D matrix (second difference)
         double[][] D = new double[n - 2][n];
         for (int i = 0; i < n - 2; i++) {
             D[i][i] = 1;
@@ -68,21 +55,17 @@ public class BSplineCurveBuilder {
             D[i][i + 2] = 1;
         }
 
-        // Build A = I + λ DᵀD
         double[][] Dt = transpose(D);
         double[][] A = add(identity(n), scale(multiply(Dt, D), lambda));
 
-        // Extract coordinates
         double[] bx = extract(points, 'x');
         double[] by = extract(points, 'y');
         double[] bz = extract(points, 'z');
 
-        // Solve
         double[] Px = solve(A, bx);
         double[] Py = solve(A, by);
         double[] Pz = solve(A, bz);
 
-        // Build smoothed points
         List<Waypoint> result = new ArrayList<>();
         for (int i = 0; i < n; i++) {
             result.add(new Waypoint(
@@ -96,14 +79,11 @@ public class BSplineCurveBuilder {
         return result;
     }
 
-    // -------------------------------
-    // Matrix utilities
-    // -------------------------------
+    // ------------------ MATRIX UTILS ------------------
+
     private double[][] identity(int n) {
         double[][] I = new double[n][n];
-        for (int i = 0; i < n; i++) {
-            I[i][i] = 1.0;
-        }
+        for (int i = 0; i < n; i++) I[i][i] = 1;
         return I;
     }
 
@@ -152,33 +132,49 @@ public class BSplineCurveBuilder {
         return arr;
     }
 
-    // Gaussian elimination
+    // SAFE Gaussian elimination
     private double[] solve(double[][] A, double[] B) {
+
         int n = B.length;
 
+        double[][] M = new double[n][n];
+        double[] b = new double[n];
+
         for (int i = 0; i < n; i++) {
+            System.arraycopy(A[i], 0, M[i], 0, n);
+            b[i] = B[i];
+        }
+
+        for (int i = 0; i < n; i++) {
+
             int max = i;
             for (int k = i + 1; k < n; k++)
-                if (Math.abs(A[k][i]) > Math.abs(A[max][i])) max = k;
+                if (Math.abs(M[k][i]) > Math.abs(M[max][i])) max = k;
 
-            double[] tmp = A[i]; A[i] = A[max]; A[max] = tmp;
-            double t = B[i]; B[i] = B[max]; B[max] = t;
+            double[] temp = M[i]; M[i] = M[max]; M[max] = temp;
+            double t = b[i]; b[i] = b[max]; b[max] = t;
+
+            if (Math.abs(M[i][i]) < 1e-8) {
+                throw new RuntimeException("Matrix is singular");
+            }
 
             for (int k = i + 1; k < n; k++) {
-                double f = A[k][i] / A[i][i];
+                double f = M[k][i] / M[i][i];
                 for (int j = i; j < n; j++)
-                    A[k][j] -= f * A[i][j];
-                B[k] -= f * B[i];
+                    M[k][j] -= f * M[i][j];
+                b[k] -= f * b[i];
             }
         }
 
         double[] x = new double[n];
+
         for (int i = n - 1; i >= 0; i--) {
-            double sum = B[i];
+            double sum = b[i];
             for (int j = i + 1; j < n; j++)
-                sum -= A[i][j] * x[j];
-            x[i] = sum / A[i][i];
+                sum -= M[i][j] * x[j];
+            x[i] = sum / M[i][i];
         }
+
         return x;
     }
 }
