@@ -8,6 +8,7 @@ import com.evtol.trajectoryengine.dto.TrajectoryResponse;
 import com.evtol.trajectoryengine.spline.CubicSplineBuilder;
 import com.evtol.trajectoryengine.bspline.BSplineCurveBuilder;
 import com.evtol.trajectoryengine.validation.WaypointValidator;
+import com.evtol.trajectoryengine.fitting.LeastSquaresFitter;
 
 import lombok.RequiredArgsConstructor;
 
@@ -28,50 +29,43 @@ public class TrajectoryService {
 
     private final SamplingService samplingService;
 
+    private final LeastSquaresFitter leastSquaresFitter;
+
     @Value("${trajectory.sampling.interval}")
     private double samplingInterval;
 
-    @Value("${trajectory.algorithm:cubic}")
+    @Value("${trajectory.algorithm}")
     private String algorithm;
 
     public TrajectoryResponse generateTrajectory() {
 
         // 1. Load waypoints
         List<Waypoint> waypoints = dataProvider.loadWaypoints();
-        System.out.println("Loaded waypoints: " + waypoints.size());
 
-        // 2. Validate
+        // 2. Validate waypoints
         validator.validate(waypoints);
 
-        // 3. Choose algorithm safely
+        // ✅ 3. Apply Least Squares to generate control points
+        List<Waypoint> controlPoints = leastSquaresFitter.fit(waypoints);
+
+        // 4. Build trajectory model
         TrajectoryModel trajectoryModel;
 
-        switch (algorithm.toLowerCase()) {
-
-            case "bspline":
-                System.out.println("Using B-Spline");
-                trajectoryModel = bSplineCurveBuilder.build(waypoints);
-                break;
-
-            case "cubic":
-            case "cubicspline":
-            default:
-                System.out.println("Using Cubic Spline");
-                trajectoryModel = cubicSplineBuilder.build(waypoints);
-                break;
+        if ("bspline".equalsIgnoreCase(algorithm)) {
+            System.out.println("BSpline  ---- (using control points)");
+            trajectoryModel = bSplineCurveBuilder.build(controlPoints);
+        } else {
+            System.out.println("cubicSpline  --- (using original waypoints)");
+            trajectoryModel = cubicSplineBuilder.build(waypoints); // unchanged
         }
 
-        // 4. Sample trajectory
+        // 5. Sample trajectory
         List<TrajectoryPoint> points =
                 samplingService.sample(trajectoryModel, samplingInterval);
 
-        System.out.println("Generated samples: " + points.size());
-        System.out.println("Total duration: " + trajectoryModel.getTotalDuration());
-
-        // 5. Return BOTH trajectory + original waypoints
+        // 6. Build response
         return new TrajectoryResponse(
-                points,
-                waypoints,   // ✅ added
+                points,waypoints,
                 trajectoryModel.getTotalDuration()
         );
     }

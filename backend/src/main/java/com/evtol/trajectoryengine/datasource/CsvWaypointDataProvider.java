@@ -18,7 +18,7 @@ public class CsvWaypointDataProvider {
         try {
 
             BufferedReader reader = new BufferedReader(
-                    new FileReader("data-generation/sample-data/trajectory1.csv")
+                    new FileReader("data-generation/sample-data/points_2 1.csv")
             );
 
             String line;
@@ -32,9 +32,9 @@ public class CsvWaypointDataProvider {
                 double t = Double.parseDouble(values[0]);
                 double x = Double.parseDouble(values[1]);
                 double y = Double.parseDouble(values[2]);
-                double z = 0; //Double.parseDouble(values[3]);
+                double z = 0 ;// Double.parseDouble(values[3]);
 
-                waypoints.add(new Waypoint(t, x, y, 0));
+                waypoints.add(new Waypoint(t, x, y, z));
             }
 
             reader.close();

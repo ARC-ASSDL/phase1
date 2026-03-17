@@ -23,7 +23,22 @@ public class DeBoorEvaluator {
 
                 int index = k - degree + j;
 
-                double alpha = (t - knots[index]) / (knots[index + degree - r + 1] - knots[index]);
+                //double alpha = (t - knots[index]) / (knots[index + degree - r + 1] - knots[index]);
+
+
+
+
+
+                double denom = knots[index + degree - r + 1] - knots[index];
+
+                double alpha = 0.0;
+
+                if (denom != 0) {
+                    alpha = (t - knots[index]) / denom;
+                }
+
+
+
 
                 Waypoint p1 = d.get(j - 1);
                 Waypoint p2 = d.get(j);
@@ -55,6 +70,11 @@ public class DeBoorEvaluator {
             }
         }
 
-        return degree;
+        //return degree;
+        return numControlPoints - 1;
     }
+
+
+
+
 }
