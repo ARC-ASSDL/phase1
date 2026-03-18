@@ -18,5 +18,6 @@ public class TrajectoryResponse {
 
     private List<TrajectoryPoint> trajectory;
     private List <Waypoint> waypoints;
+    private List<Waypoint> controlPoints;
     private double totalDuration;
 }

@@ -10,118 +10,217 @@ import java.util.List;
 @Component
 public class LeastSquaresFitter {
 
-    @Value("${trajectory.ls.degree:3}")
+    @Value("${trajectory.bspline.degree:3}")
     private int degree;
 
-    @Value("${trajectory.ls.controlPoints:20}")
+    @Value("${trajectory.bspline.controlPoints:20}")
     private int controlPointCount;
 
     public List<Waypoint> fit(List<Waypoint> waypoints) {
 
         int n = waypoints.size();
-        if (n < 2) return waypoints;
+        if (n < degree + 1) return waypoints;
+
+        // ---------------------------
+        // CHORD-LENGTH PARAMETERIZATION
+        // ---------------------------
+        double[] tNorm = computeChordLengthParams(waypoints);
 
         double tMin = waypoints.get(0).getT();
         double tMax = waypoints.get(n - 1).getT();
         double range = tMax - tMin;
 
-        double[] tNorm = new double[n];
-        double[] x = new double[n];
-        double[] y = new double[n];
-        double[] z = new double[n];
+        // ---------------------------
+        // DATA-DRIVEN KNOT VECTOR
+        // ---------------------------
+        double[] knots = generateDataKnots(tNorm, controlPointCount, degree);
+
+        // ---------------------------
+        // BASIS MATRIX
+        // ---------------------------
+        double[][] N = new double[n][controlPointCount];
 
         for (int i = 0; i < n; i++) {
-            Waypoint wp = waypoints.get(i);
-            tNorm[i] = (wp.getT() - tMin) / range;
-            x[i] = wp.getX();
-            y[i] = wp.getY();
-            z[i] = wp.getZ();
+            for (int j = 0; j < controlPointCount; j++) {
+                N[i][j] = basis(j, degree, tNorm[i], knots);
+            }
         }
 
-        double[] coeffX = fitPolynomial(tNorm, x, degree);
-        double[] coeffY = fitPolynomial(tNorm, y, degree);
-        double[] coeffZ = fitPolynomial(tNorm, z, degree);
+        // ---------------------------
+        // EXTRACT DATA
+        // ---------------------------
+        double[] x = extract(waypoints, 'x');
+        double[] y = extract(waypoints, 'y');
+        double[] z = extract(waypoints, 'z');
 
+        // ---------------------------
+        // QR-BASED LEAST SQUARES
+        // ---------------------------
+        double[] Px = qrSolve(N, x);
+        double[] Py = qrSolve(N, y);
+        double[] Pz = qrSolve(N, z);
+
+        // ---------------------------
+        // BUILD CONTROL POINTS
+        // ---------------------------
         List<Waypoint> controlPoints = new ArrayList<>();
 
         for (int i = 0; i < controlPointCount; i++) {
-            double tN = (double) i / (controlPointCount - 1);
-            double tActual = tMin + tN * range;
-
-            double cx = eval(coeffX, tN);
-            double cy = eval(coeffY, tN);
-            double cz = eval(coeffZ, tN);
-
-            controlPoints.add(new Waypoint(tActual, cx, cy, cz));
+            double tActual = tMin + (double) i / (controlPointCount - 1) * range;
+            controlPoints.add(new Waypoint(tActual, Px[i], Py[i], Pz[i]));
         }
 
         return controlPoints;
     }
 
-    // -------------------------------
-    // Polynomial Least Squares
-    // -------------------------------
-    private double[] fitPolynomial(double[] t, double[] values, int degree) {
+    // ---------------------------
+    // CHORD-LENGTH PARAMETERIZATION
+    // ---------------------------
+    private double[] computeChordLengthParams(List<Waypoint> waypoints) {
 
-        int n = t.length;
-        int m = degree + 1;
+        int n = waypoints.size();
+        double[] t = new double[n];
 
-        double[][] A = new double[m][m];
-        double[] B = new double[m];
+        t[0] = 0.0;
+        double total = 0.0;
 
-        for (int row = 0; row < m; row++) {
-            for (int col = 0; col < m; col++) {
-                double sum = 0;
-                for (int i = 0; i < n; i++) {
-                    sum += Math.pow(t[i], row + col);
-                }
-                A[row][col] = sum;
-            }
+        for (int i = 1; i < n; i++) {
+            Waypoint p1 = waypoints.get(i - 1);
+            Waypoint p2 = waypoints.get(i);
 
-            double sum = 0;
-            for (int i = 0; i < n; i++) {
-                sum += values[i] * Math.pow(t[i], row);
-            }
-            B[row] = sum;
+            double dx = p2.getX() - p1.getX();
+            double dy = p2.getY() - p1.getY();
+            double dz = p2.getZ() - p1.getZ();
+
+            double dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+            total += dist;
+            t[i] = total;
         }
 
-        return solveGaussian(A, B);
-    }
-
-    // -------------------------------
-    // Gaussian Elimination
-    // -------------------------------
-    private double[] solveGaussian(double[][] A, double[] B) {
-
-        int n = B.length;
+        if (total == 0) return t;
 
         for (int i = 0; i < n; i++) {
+            t[i] /= total;
+        }
 
-            // Pivot
-            int maxRow = i;
-            for (int k = i + 1; k < n; k++) {
-                if (Math.abs(A[k][i]) > Math.abs(A[maxRow][i])) {
-                    maxRow = k;
+        return t;
+    }
+
+    // ---------------------------
+    // DATA-DRIVEN KNOT VECTOR
+    // ---------------------------
+    private double[] generateDataKnots(double[] t, int nCtrl, int degree) {
+
+        int m = nCtrl + degree + 1;
+        double[] knots = new double[m];
+
+        int n = t.length - 1;
+
+        // Clamped start
+        for (int i = 0; i <= degree; i++) {
+            knots[i] = 0.0;
+        }
+
+        // Interior knots
+        for (int j = 1; j < nCtrl - degree; j++) {
+
+            double u = (double) j * n / (nCtrl - degree);
+            int idx = (int) Math.floor(u);
+
+            double sum = 0.0;
+
+            for (int k = idx; k < idx + degree; k++) {
+                sum += t[Math.min(k, n)];
+            }
+
+            knots[j + degree] = sum / degree;
+        }
+
+        // Clamped end
+        for (int i = m - degree - 1; i < m; i++) {
+            knots[i] = 1.0;
+        }
+
+        return knots;
+    }
+
+    // ---------------------------
+    // COX–DE BOOR BASIS
+    // ---------------------------
+    private double basis(int i, int p, double t, double[] knots) {
+
+        if (p == 0) {
+            if (t >= knots[i] && t < knots[i + 1]) return 1.0;
+            if (t == 1.0 && i == knots.length - 2) return 1.0;
+            return 0.0;
+        }
+
+        double left = 0.0, right = 0.0;
+
+        double denom1 = knots[i + p] - knots[i];
+        if (denom1 != 0) {
+            left = (t - knots[i]) / denom1 * basis(i, p - 1, t, knots);
+        }
+
+        double denom2 = knots[i + p + 1] - knots[i + 1];
+        if (denom2 != 0) {
+            right = (knots[i + p + 1] - t) / denom2 * basis(i + 1, p - 1, t, knots);
+        }
+
+        return left + right;
+    }
+
+    // ---------------------------
+    // QR SOLVER (Gram-Schmidt)
+    // ---------------------------
+    private double[] qrSolve(double[][] A, double[] b) {
+
+        int m = A.length;
+        int n = A[0].length;
+
+        double[][] Q = new double[m][n];
+        double[][] R = new double[n][n];
+
+        for (int j = 0; j < n; j++) {
+
+            double[] v = new double[m];
+            for (int i = 0; i < m; i++) {
+                v[i] = A[i][j];
+            }
+
+            for (int k = 0; k < j; k++) {
+
+                double dot = 0;
+                for (int i = 0; i < m; i++) {
+                    dot += Q[i][k] * A[i][j];
+                }
+
+                R[k][j] = dot;
+
+                for (int i = 0; i < m; i++) {
+                    v[i] -= dot * Q[i][k];
                 }
             }
 
-            // Swap
-            double[] temp = A[i];
-            A[i] = A[maxRow];
-            A[maxRow] = temp;
+            double norm = 0;
+            for (double val : v) norm += val * val;
+            norm = Math.sqrt(norm);
 
-            double t = B[i];
-            B[i] = B[maxRow];
-            B[maxRow] = t;
+            if (norm == 0) continue;
 
-            // Eliminate
-            for (int k = i + 1; k < n; k++) {
-                double factor = A[k][i] / A[i][i];
+            R[j][j] = norm;
 
-                for (int j = i; j < n; j++) {
-                    A[k][j] -= factor * A[i][j];
-                }
-                B[k] -= factor * B[i];
+            for (int i = 0; i < m; i++) {
+                Q[i][j] = v[i] / norm;
+            }
+        }
+
+        // Qᵀb
+        double[] Qt_b = new double[n];
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                Qt_b[j] += Q[i][j] * b[i];
             }
         }
 
@@ -129,30 +228,28 @@ public class LeastSquaresFitter {
         double[] x = new double[n];
 
         for (int i = n - 1; i >= 0; i--) {
-            double sum = B[i];
+            double sum = Qt_b[i];
 
             for (int j = i + 1; j < n; j++) {
-                sum -= A[i][j] * x[j];
+                sum -= R[i][j] * x[j];
             }
 
-            x[i] = sum / A[i][i];
+            x[i] = sum / R[i][i];
         }
 
         return x;
     }
 
-    // -------------------------------
-    // Evaluate polynomial
-    // -------------------------------
-    private double eval(double[] coeff, double t) {
-        double result = 0;
-        double power = 1;
-
-        for (double c : coeff) {
-            result += c * power;
-            power *= t;
+    // ---------------------------
+    // UTIL
+    // ---------------------------
+    private double[] extract(List<Waypoint> w, char axis) {
+        double[] arr = new double[w.size()];
+        for (int i = 0; i < w.size(); i++) {
+            arr[i] = (axis == 'x') ? w.get(i).getX()
+                    : (axis == 'y') ? w.get(i).getY()
+                    : w.get(i).getZ();
         }
-
-        return result;
+        return arr;
     }
 }

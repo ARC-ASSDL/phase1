@@ -64,6 +64,7 @@ public class TrajectoryService {
         return new TrajectoryResponse(
                 points,
                 waypoints,
+                controlPoints,
                 trajectoryModel.getTotalDuration()
         );
     }
