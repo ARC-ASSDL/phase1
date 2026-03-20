@@ -18,7 +18,7 @@ public class CsvWaypointDataProvider {
         try {
 
             BufferedReader reader = new BufferedReader(
-                    new FileReader("data-generation/sample-data/points_2 1.csv")
+                    new FileReader("data-generation/sample-data/points.csv")
             );
 
             String line;

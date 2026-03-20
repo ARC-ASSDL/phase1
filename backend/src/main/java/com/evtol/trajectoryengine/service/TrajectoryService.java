@@ -28,7 +28,6 @@ public class TrajectoryService {
     private final BSplineCurveBuilder bSplineCurveBuilder;
 
     private final SamplingService samplingService;
-
     private final LeastSquaresFitter leastSquaresFitter;
 
     @Value("${trajectory.sampling.interval}")
@@ -37,35 +36,35 @@ public class TrajectoryService {
     @Value("${trajectory.algorithm}")
     private String algorithm;
 
-    public TrajectoryResponse generateTrajectory() {
+    public TrajectoryResponse generateTrajectory(double lambda) {
 
         // 1. Load waypoints
         List<Waypoint> waypoints = dataProvider.loadWaypoints();
 
-        // 2. Validate waypoints
+        // 2. Validate
         validator.validate(waypoints);
 
-        // ✅ 3. Apply Least Squares to generate control points
+        // 3. Least squares → control points
         List<Waypoint> controlPoints = leastSquaresFitter.fit(waypoints);
 
-        // 4. Build trajectory model
+        // 4. Build trajectory
         TrajectoryModel trajectoryModel;
 
         if ("bspline".equalsIgnoreCase(algorithm)) {
-            System.out.println("BSpline  ---- (using control points)");
-            trajectoryModel = bSplineCurveBuilder.build(controlPoints);
+            trajectoryModel = bSplineCurveBuilder.build(controlPoints, lambda);
         } else {
-            System.out.println("cubicSpline  --- (using original waypoints)");
-            trajectoryModel = cubicSplineBuilder.build(waypoints); // unchanged
+            trajectoryModel = cubicSplineBuilder.build(waypoints);
         }
 
-        // 5. Sample trajectory
+        // 5. Sample
         List<TrajectoryPoint> points =
                 samplingService.sample(trajectoryModel, samplingInterval);
 
-        // 6. Build response
+        // 6. Response
         return new TrajectoryResponse(
-                points,waypoints,
+                points,
+                waypoints,
+                controlPoints,
                 trajectoryModel.getTotalDuration()
         );
     }
