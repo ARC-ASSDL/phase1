@@ -13,7 +13,7 @@ public class LeastSquaresFitter {
     @Value("${trajectory.bspline.degree:3}")
     private int degree;
 
-    @Value("${trajectory.bspline.controlPoints:20}")
+    @Value("${trajectory.bspline.controlPoints:40}")
     private int controlPointCount;
 
     public List<Waypoint> fit(List<Waypoint> waypoints) {
