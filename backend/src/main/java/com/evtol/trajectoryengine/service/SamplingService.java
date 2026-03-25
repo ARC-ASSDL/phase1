@@ -112,7 +112,6 @@ import com.evtol.trajectoryengine.domain.TrajectoryPoint;
 import com.evtol.trajectoryengine.domain.Waypoint;
 
 import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -183,6 +182,7 @@ public class SamplingService {
         double tStart = knots[degree];
         double tEnd = knots[knots.length - degree - 1];
         double duration = tEnd - tStart;
+        samplingInterval=0.001;
 
         for (double u = 0.0; u <= 1.0; u += samplingInterval) {
 

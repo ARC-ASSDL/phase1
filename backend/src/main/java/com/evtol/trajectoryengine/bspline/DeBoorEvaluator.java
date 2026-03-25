@@ -73,8 +73,4 @@ public class DeBoorEvaluator {
         //return degree;
         return numControlPoints - 1;
     }
-
-
-
-
 }
