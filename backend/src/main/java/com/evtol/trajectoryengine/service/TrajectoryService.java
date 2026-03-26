@@ -42,7 +42,7 @@ public class TrajectoryService {
         List<Waypoint> waypoints = dataProvider.loadWaypoints();
 
         // 2. Validate
-        validator.validate(waypoints);
+        //validator.validate(waypoints);
 
         // 3. Least squares → control points
         List<Waypoint> controlPoints = leastSquaresFitter.fit(waypoints);

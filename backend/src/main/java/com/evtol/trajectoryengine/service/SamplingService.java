@@ -110,7 +110,6 @@ import com.evtol.trajectoryengine.domain.CubicSegment;
 import com.evtol.trajectoryengine.domain.TrajectoryModel;
 import com.evtol.trajectoryengine.domain.TrajectoryPoint;
 import com.evtol.trajectoryengine.domain.Waypoint;
-
 import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
