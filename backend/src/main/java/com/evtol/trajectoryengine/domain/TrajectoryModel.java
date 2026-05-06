@@ -77,4 +77,9 @@ public class TrajectoryModel {
     public boolean isBSpline() {
         return controlPoints != null;
     }
+
+    public TrajectoryModel adjustForObstacle(Obstacle obstacle) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'adjustForObstacle'");
+    }
 }

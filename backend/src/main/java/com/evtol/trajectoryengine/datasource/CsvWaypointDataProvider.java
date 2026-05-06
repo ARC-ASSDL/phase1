@@ -18,8 +18,8 @@ public class CsvWaypointDataProvider {
         try {
 
             BufferedReader reader = new BufferedReader(
-                    new FileReader("data-generation/sample-data/Trajectory 1.csv")
-            );
+                    new FileReader(
+                            "C:\\Users\\DESKTOP\\Downloads\\evtol_project\\data-generation\\sample-data\\evtol_trajectory_final (1).csv"));
 
             String line;
 
@@ -32,7 +32,7 @@ public class CsvWaypointDataProvider {
                 double t = Double.parseDouble(values[0]);
                 double x = Double.parseDouble(values[1]);
                 double y = Double.parseDouble(values[2]);
-                double z =  Double.parseDouble(values[3]);
+                double z = Double.parseDouble(values[3]);
 
                 waypoints.add(new Waypoint(t, x, y, z));
             }
@@ -44,14 +44,14 @@ public class CsvWaypointDataProvider {
         }
 
         // to be removed later (just for testing)
-//        for (Waypoint wp : waypoints) {
-//            System.out.println(
-//                    "t=" + wp.getT() +
-//                            ", x=" + wp.getX() +
-//                            ", y=" + wp.getY() +
-//                            ", z=" + wp.getZ()
-//            );
-//        }
+        // for (Waypoint wp : waypoints) {
+        // System.out.println(
+        // "t=" + wp.getT() +
+        // ", x=" + wp.getX() +
+        // ", y=" + wp.getY() +
+        // ", z=" + wp.getZ()
+        // );
+        // }
 
         return waypoints;
     }

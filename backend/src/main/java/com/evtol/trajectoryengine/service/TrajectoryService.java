@@ -9,6 +9,8 @@ import com.evtol.trajectoryengine.spline.CubicSplineBuilder;
 import com.evtol.trajectoryengine.bspline.BSplineCurveBuilder;
 import com.evtol.trajectoryengine.validation.WaypointValidator;
 import com.evtol.trajectoryengine.fitting.LeastSquaresFitter;
+import com.evtol.trajectoryengine.domain.Obstacle;
+import com.evtol.trajectoryengine.planning.RrtStarPlanner;
 
 import lombok.RequiredArgsConstructor;
 
@@ -29,6 +31,7 @@ public class TrajectoryService {
 
     private final SamplingService samplingService;
     private final LeastSquaresFitter leastSquaresFitter;
+    private final RrtStarPlanner rrtStarPlanner;
 
     @Value("${trajectory.sampling.interval}")
     private double samplingInterval;
@@ -67,5 +70,47 @@ public class TrajectoryService {
                 controlPoints,
                 trajectoryModel.getTotalDuration()
         );
+    }
+
+    public TrajectoryResponse generateTrajectory(double lambda, List<Obstacle> obstacles) {
+
+        // 1. Load waypoints
+        List<Waypoint> rawWaypoints = dataProvider.loadWaypoints();
+        List<Waypoint> waypoints = applyObstacleAvoidance(rawWaypoints, obstacles);
+
+        // 2. Validate
+        validator.validate(waypoints);
+
+        // 3. Least squares → control points
+        List<Waypoint> controlPoints = leastSquaresFitter.fit(waypoints);
+
+        // 4. Build trajectory
+        TrajectoryModel trajectoryModel;
+
+        if ("bspline".equalsIgnoreCase(algorithm)) {
+            trajectoryModel = bSplineCurveBuilder.build(controlPoints, lambda);
+        } else {
+            trajectoryModel = cubicSplineBuilder.build(waypoints);
+        }
+
+        // 5. Sample
+        List<TrajectoryPoint> points =
+                samplingService.sample(trajectoryModel, samplingInterval);
+
+        // 6. Response
+        return new TrajectoryResponse(
+                points,
+                waypoints,
+                controlPoints,
+                trajectoryModel.getTotalDuration()
+        );
+    }
+
+    private List<Waypoint> applyObstacleAvoidance(List<Waypoint> sourceWaypoints, List<Obstacle> obstacles) {
+        if (sourceWaypoints == null || sourceWaypoints.size() < 3 || obstacles == null || obstacles.isEmpty()) {
+            return sourceWaypoints;
+        }
+
+        return rrtStarPlanner.plan(sourceWaypoints, obstacles);
     }
 }
