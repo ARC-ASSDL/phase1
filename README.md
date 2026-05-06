@@ -1,1 +1,0 @@
-# evtol_project
