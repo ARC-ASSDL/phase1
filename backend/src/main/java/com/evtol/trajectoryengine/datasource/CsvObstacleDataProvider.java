@@ -12,7 +12,7 @@ import java.util.List;
 @Component
 public class CsvObstacleDataProvider {
 
-    @Value("${C:\\Users\\DESKTOP\\Downloads\\evtol_project\\data-generation\\sample-data\\obstacles.csv}")
+    @Value("${C:\\Users\\USER\\Downloads\\evtol_project\\data-generation\\sample-data\\obstacles.csv}")
     private String obstacleFilePath;
 
     public List<Obstacle> loadObstacles() {
