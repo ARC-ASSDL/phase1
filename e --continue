@@ -1,0 +1,25 @@
+* [33me3c9e03[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m Remove Azure secret from env example
+*   [33m7bfab7a[m  phase1
+[32m|[m[33m\[m  
+[32m|[m * [33md046271[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Initial commit
+* [33m20bc960[m  phase1
+*   [33meae2a03[m Merge branch 'main' of https://github.com/Anjaliguduru29/evtol_project
+[34m|[m[35m\[m  
+[34m|[m * [33m00a6649[m Initial commit
+* [33me042429[m Add EVTOL backend, frontend, YOLO service, and data
+*   [33m889b2cd[m Merge pull request #23 from ndmatrix/csv-parser
+[36m|[m[1;31m\[m  
+[36m|[m * [33mcab5ed3[m updated
+* [1;31m|[m [33mff932df[m Merge pull request #22 from ndmatrix/csv-parser
+[1;32m|[m[1;31m\[m[1;31m|[m 
+[1;32m|[m * [33mfc33a79[m updated sampling interval
+[1;32m|[m[1;32m/[m  
+*   [33m5573315[m Merge pull request #21 from ndmatrix/bspline
+[1;34m|[m[1;35m\[m  
+[1;34m|[m *   [33m78f0bdf[m Merge branch 'main' into bspline
+[1;34m|[m [1;36m|[m[1;34m\[m  
+[1;34m|[m [1;36m|[m[1;34m/[m  
+[1;34m|[m[1;34m/[m[1;36m|[m   
+* [1;36m|[m [33mef73d31[m added new data sets
+* [1;36m|[m   [33m28b34dc[m Merge remote-tracking branch 'origin/main'
+[32m|[m[33m\[m [1;36m\[m  
